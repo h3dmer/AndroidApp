@@ -1,22 +1,28 @@
 package com.example.myapp.model;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class Item {
 
     @SerializedName("id")
+    @Expose
     private int id;
 
     @SerializedName("title")
+    @Expose
     private String title;
 
     @SerializedName("subtitle")
+    @Expose
     private String subtitle;
 
     @SerializedName("thumb")
+    @Expose
     private String thumbURL;
 
     @SerializedName("color")
+    @Expose
     private String color;
 
     public Item(int id, String title, String subtitle, String thumbURL, String color) {

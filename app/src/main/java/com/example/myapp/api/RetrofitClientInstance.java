@@ -1,14 +1,15 @@
 package com.example.myapp.api;
 
-import com.example.myapp.model.ListApiResponse;
 
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClientInstance {
 
-    private Retrofit retrofit;
-    private static final String URL = "http://test.goapps.vipserv.org";
+    private static Retrofit retrofit;
+    private static final String URL = "http://test.goapps.vipserv.org/";
     private static RetrofitClientInstance retrofitInstance;
 
 
@@ -30,8 +31,8 @@ public class RetrofitClientInstance {
 
     }
 
-    public ListApiResponse getListResponse() {
-        return retrofit.create(ListApiResponse.class);
+    public ListService getListResponse() {
+        return retrofit.create(ListService.class);
     }
 
 }
