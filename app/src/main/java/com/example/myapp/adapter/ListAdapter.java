@@ -17,19 +17,19 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.myapp.R;
+import com.example.myapp.model.Item;
 import com.example.myapp.model.ListApiResponse;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHolder> {
 
 
-    private ListApiResponse dataList;
+    private List<Item> dataList;
     private Context context;
 
 
-    public ListAdapter(ListApiResponse dataList, Context context) {
+    public ListAdapter(List<Item> dataList, Context context) {
 
         this.dataList = dataList;
         this.context = context;
@@ -53,15 +53,15 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHo
 
         String jsonColor;
 
-        if (dataList.getItemsList().get(i).getColor() == null)
+        if (dataList.get(i).getColor() == null)
             jsonColor = "null";
         else
-            jsonColor = dataList.getItemsList().get(i).getColor();
+            jsonColor = dataList.get(i).getColor();
 
-        Log.e("Color ->>>>> ", jsonColor);
+        //Log.e("Color ->>>>> ", jsonColor);
 
-        viewHolder.txtTitle.setText(dataList.getItemsList().get(i).getTitle());
-        viewHolder.txtSubtitle.setText(dataList.getItemsList().get(i).getSubtitle());
+        viewHolder.txtTitle.setText(dataList.get(i).getTitle());
+        viewHolder.txtSubtitle.setText(dataList.get(i).getSubtitle());
 
 
 
@@ -73,13 +73,13 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHo
             case "red":  viewHolder.rl.setBackgroundColor(Color.RED); break;
             case "yellow":  viewHolder.rl.setBackgroundColor(Color.YELLOW); break;
 
-            //default: viewHolder.rl.setBackgroundColor(Color.WHITE);
+            default: viewHolder.rl.setBackgroundColor(Color.WHITE);
         }
 
 
         Glide
                 .with(context)
-                .load(dataList.getItemsList().get(i).getThumbURL())
+                .load(dataList.get(i).getThumbURL())
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 //.fitCenter()
                 //.centerCrop()
@@ -90,7 +90,22 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHo
 
     @Override
     public int getItemCount() {
-        return dataList.getItemsList().size();
+        return dataList.size();
+    }
+
+    public void clear() {
+        dataList.clear();
+        notifyDataSetChanged();
+    }
+
+    public void addItems(List<Item> items) {
+
+        for (Item i : items) {
+            dataList.add(i);
+        }
+
+        notifyDataSetChanged();
+
     }
 
 
@@ -119,13 +134,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHo
             txtSubtitle = mView.findViewById(R.id.subtitle);
             cardView = mView.findViewById(R.id.mainCardView);
 
-
         }
-
-
-
     }
-
 
 
 

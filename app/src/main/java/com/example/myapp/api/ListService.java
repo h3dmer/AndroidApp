@@ -12,7 +12,7 @@ public interface ListService {
 
 
     @GET("index.php")
-    Call<List<ListApiResponse>> getListApiResponse(
+    Call<ListApiResponse> getItems(
             @Query("page") int numberOfPage,
             @Query("count") int showItemsInPage
     );

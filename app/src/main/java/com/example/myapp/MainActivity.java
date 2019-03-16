@@ -1,15 +1,19 @@
 package com.example.myapp;
 
+import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.example.myapp.adapter.ListAdapter;
 import com.example.myapp.api.ListService;
 import com.example.myapp.api.RetrofitClientInstance;
+import com.example.myapp.model.Item;
 import com.example.myapp.model.ListApiResponse;
 
 import java.util.List;
@@ -23,51 +27,145 @@ public class MainActivity extends AppCompatActivity {
 
     private ListAdapter listAdapter;
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout pullToRefresh;
+    private LinearLayoutManager layoutManager;
+
+    private int pageNumber = 0;
+    private int countItems = 10;
 
 
+
+    private boolean isLoading = true;
+    private int pastVisibleItems , visibleItemCount, totalItemCount, previuos_total = 0;
+    private int view_threshold = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        recyclerView = findViewById(R.id.mainRecyclerView);
+        pullToRefresh = findViewById(R.id.pullToRefresh);
 
-
-     Call<ListApiResponse> call =
-             RetrofitClientInstance
-             .getRetrofitInstance()
-             .getListResponse()
-             .getWholeList();
-             //.getListApiResponse(10,10);
+        layoutManager = new LinearLayoutManager(MainActivity.this);
 
 
 
-     call.enqueue(new Callback<ListApiResponse>() {
-         @Override
-         public void onResponse(Call<ListApiResponse> call, Response<ListApiResponse> response) {
-             Toast.makeText(MainActivity.this, "Dzialaa", Toast.LENGTH_SHORT).show();
-             generateList(response.body());
-         }
 
-         @Override
-         public void onFailure(Call<ListApiResponse> call, Throwable t) {
-             Toast.makeText(MainActivity.this, "Something went wrong....", Toast.LENGTH_SHORT).show();
-            Log.e("Rest Response ->", call.toString());
-            Log.e("Nie dziala -> ", t.toString());
-         }
-     });
+
+        callEnq();
+
+
+        pullToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                listAdapter.clear();
+
+                callEnq();
+
+                pageNumber = 0;
+                pastVisibleItems = 0;
+                visibleItemCount = 0;
+                totalItemCount = 0;
+                previuos_total = 0;
+
+                Toast.makeText(MainActivity.this, "Refreshed", Toast.LENGTH_SHORT).show();
+
+                pullToRefresh.setRefreshing(false);
+            }
+        });
+
+        //callEnq();
+
+       recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+           @Override
+           public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+               super.onScrolled(recyclerView, dx, dy);
+
+               visibleItemCount = layoutManager.getChildCount();
+               totalItemCount = layoutManager.getItemCount();
+               pastVisibleItems = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+
+
+               if (dy > 0)
+               {
+                   if(isLoading) {
+                       if (totalItemCount > previuos_total) {
+                           isLoading = false;
+                           previuos_total = totalItemCount;
+                       }
+                   }
+
+                   if (!isLoading && (totalItemCount - visibleItemCount) <= (pastVisibleItems + view_threshold))
+                   {
+                       pageNumber++;
+                       pagination();
+                       //callEnq();
+                       isLoading = true;
+                   }
+
+               }
+
+           }
+       });
+
+    }
+
+
+    private void callEnq() {
+
+        Call<ListApiResponse> call =
+                RetrofitClientInstance
+                        .getRetrofitInstance()
+                        .getListResponse()
+                        .getItems(0, 10);
+
+        call.enqueue(new Callback<ListApiResponse>() {
+            @Override
+            public void onResponse(Call<ListApiResponse> call, Response<ListApiResponse> response) {
+                Log.e("Working fine", response.toString());
+                List<Item> items = response.body().getItemsList();
+                listAdapter = new ListAdapter(items, MainActivity.this);
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(listAdapter);
+            }
+
+            @Override
+            public void onFailure(Call<ListApiResponse> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Something went wrong....", Toast.LENGTH_SHORT).show();
+                Log.e("Rest Response ->", call.toString());
+                Log.e("Nie dziala -> ", t.toString());
+            }
+        });
 
 
     }
 
 
-    private void generateList(ListApiResponse apiResponses) {
+    private void pagination() {
 
-        recyclerView = findViewById(R.id.mainRecyclerView);
-        listAdapter = new ListAdapter(apiResponses, this);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(listAdapter);
+        Call<ListApiResponse> call =
+                RetrofitClientInstance
+                        .getRetrofitInstance()
+                        .getListResponse()
+                        .getItems(pageNumber, countItems);
+
+        call.enqueue(new Callback<ListApiResponse>() {
+            @Override
+            public void onResponse(Call<ListApiResponse> call, Response<ListApiResponse> response) {
+                Log.e("Pagination succeed", response.message());
+
+                List<Item> items = response.body().getItemsList();
+                listAdapter.addItems(items);
+                Toast.makeText(MainActivity.this, "Next page", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<ListApiResponse> call, Throwable t) {
+                Log.e("Pagination failed ", call.toString());
+                Log.e("Here is message -> ", t.getMessage());
+            }
+        });
 
     }
 
