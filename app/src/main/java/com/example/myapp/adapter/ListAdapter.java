@@ -1,6 +1,8 @@
 package com.example.myapp.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
@@ -16,24 +18,28 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.myapp.DetailActivity;
 import com.example.myapp.R;
 import com.example.myapp.model.Item;
 import com.example.myapp.model.ListApiResponse;
 
 import java.util.List;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHolder> {
 
 
     private List<Item> dataList;
     private Context context;
+    private ListApiResponse apiRes;
 
 
-    public ListAdapter(List<Item> dataList, Context context) {
+    public ListAdapter(List<Item> dataList, Context context, ListApiResponse apiRes) {
 
         this.dataList = dataList;
         this.context = context;
-
+        this.apiRes = apiRes;
     }
 
 
@@ -48,7 +54,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHo
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ListAdapter.ResponseViewHolder viewHolder, int i) {
+    public void onBindViewHolder(@NonNull ListAdapter.ResponseViewHolder viewHolder, final int i) {
 
 
         String jsonColor;
@@ -69,13 +75,12 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHo
             case "green": viewHolder.rl.setBackgroundColor(Color.GREEN); break;
             case "blue":  viewHolder.rl.setBackgroundColor(Color.BLUE); break;
             case "null":  viewHolder.rl.setBackgroundColor(Color.WHITE); break;
-            case "grey":  viewHolder.rl.setBackgroundColor(Color.GREEN); break;
+            case "grey":  viewHolder.rl.setBackgroundColor(Color.GRAY); break;
             case "red":  viewHolder.rl.setBackgroundColor(Color.RED); break;
             case "yellow":  viewHolder.rl.setBackgroundColor(Color.YELLOW); break;
 
             default: viewHolder.rl.setBackgroundColor(Color.WHITE);
         }
-
 
         Glide
                 .with(context)
@@ -84,6 +89,25 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ResponseViewHo
                 //.fitCenter()
                 //.centerCrop()
                 .into(viewHolder.image);
+
+
+        viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(context, DetailActivity.class);
+
+                intent.putExtra("Id", dataList.get(i).getId());
+                intent.putExtra("Title", dataList.get(i).getTitle());
+                intent.putExtra("Subtitle", dataList.get(i).getSubtitle());
+                intent.putExtra("AccessToken", apiRes.getAccessToken());
+                Log.e("Access Token -> ", apiRes.getAccessToken());
+
+                context.startActivity(intent);
+            }
+        });
+
+
 
 
     }

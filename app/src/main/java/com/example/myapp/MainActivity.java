@@ -1,5 +1,8 @@
 package com.example.myapp;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -30,14 +33,17 @@ public class MainActivity extends AppCompatActivity {
     private SwipeRefreshLayout pullToRefresh;
     private LinearLayoutManager layoutManager;
 
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
+
     private int pageNumber = 0;
     private int countItems = 10;
-
 
 
     private boolean isLoading = true;
     private int pastVisibleItems , visibleItemCount, totalItemCount, previuos_total = 0;
     private int view_threshold = 10;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,11 +53,12 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.mainRecyclerView);
         pullToRefresh = findViewById(R.id.pullToRefresh);
 
+        preferences = getSharedPreferences("accessToken", MODE_PRIVATE);
+        editor = preferences.edit();
+
+
         layoutManager = new LinearLayoutManager(MainActivity.this);
-
-
-
-
+        
 
         callEnq();
 
@@ -106,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
                }
 
+
            }
        });
 
@@ -124,10 +132,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ListApiResponse> call, Response<ListApiResponse> response) {
                 Log.e("Working fine", response.toString());
+                //Log.e("Access Token", response.body().getAccessToken());
+
                 List<Item> items = response.body().getItemsList();
-                listAdapter = new ListAdapter(items, MainActivity.this);
+                listAdapter = new ListAdapter(items, MainActivity.this, response.body());
                 recyclerView.setLayoutManager(layoutManager);
                 recyclerView.setAdapter(listAdapter);
+
+                editor.putString("akces", response.body().getAccessToken()).apply();
+                editor.commit();
             }
 
             @Override
@@ -153,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<ListApiResponse>() {
             @Override
             public void onResponse(Call<ListApiResponse> call, Response<ListApiResponse> response) {
-                Log.e("Pagination succeed", response.message());
+                Log.e("Working fine", response.toString());
 
                 List<Item> items = response.body().getItemsList();
                 listAdapter.addItems(items);
